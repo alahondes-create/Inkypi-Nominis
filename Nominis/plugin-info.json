@@ -2,8 +2,4 @@
     "display_name": "Saint du Jour Nominis",
     "id": "Nominis",
     "class": "Nominis",
-    "repository": "https://github.com/amaury-lahondes/InkyPi-Nominis-LeChat",
-    "description": "Affiche le saint du jour depuis nominis.cef.fr avec synthèse littéraire via l'API Mistral (LeChat)",
-    "version": "1.0.0",
-    "author": "Amaury Lahondes"
 }
