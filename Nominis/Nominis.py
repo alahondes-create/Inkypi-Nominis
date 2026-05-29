@@ -84,7 +84,7 @@ class Nominis(BasePlugin):
                 current = current.find_next()
 
             biographie = " ".join(biographie_paragraphes)
-        return saint_nom, biographie
+            return saint_nom, biographie
 
         except Exception as e:
             logger.error(f"Error: {e}")
