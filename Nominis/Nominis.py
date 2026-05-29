@@ -55,23 +55,37 @@ class Nominis(BasePlugin):
     }
 
     def _fetch_saint_of_the_day(self):
+    """Récupère le saint du jour et sa description depuis la page d'accueil de Nominis."""
+        url = "https://nominis.cef.fr/"
         try:
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get("https://nominis.cef.fr/", headers=headers, timeout=10)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
 
-            name_elem = soup.find('h2') or soup.find('h3') or soup.find(class_=re.compile(r'title|saint|nom', re.I))
-            saint_name = name_elem.get_text().strip() if name_elem else "Saint du jour"
-            saint_name = re.sub(r'\s+', ' ', saint_name)
+            # Tr    ouver le premier <h2> (nom du saint)
+            saint_h2 = soup.find("h2")
+            if not saint_h2:
+                return None
 
-            desc_div = soup.find('div', class_=re.compile(r'contenu|texte', re.I)) or (soup.find_all('p')[0] if soup.find_all('p') else None)
-            saint_description = desc_div.get_text().strip() if desc_div else "Description non disponible"
-            saint_description = re.sub(r'\s+', ' ', saint_description)
-            saint_description = re.sub(r'[\\u2018\\u2019]', "'", saint_description)
-            saint_description = re.sub(r'[\\u201C\\u201D]', "-", saint_description)
+            saint_nom = saint_h2.get_text(strip=True)
 
-            return saint_name, saint_description
+            # Extraire TOUS les paragraphes et textes après le <h2> jusqu'au prochain titre majeur
+            biographie_paragraphes = []
+            current = saint_h2.find_next()
+            while current:
+                # Arrêter si on trouve un titre de section suivante (h1, h2, h4, etc.)
+                if current.name in ["h1", "h2", "h4", "h5", "h6"]:
+                    break
+                # Si c'est un paragraphe ou un texte direct
+                if current.name == "p" or (current.name is None and current.strip()):
+                    texte = current.get_text(strip=True) if current.name else current.strip()
+                    if texte and len(texte) > 10:  # Ignorer les textes trop courts (espaces, etc.)
+                        biographie_paragraphes.append(texte)
+                current = current.find_next()
+
+            biographie = " ".join(biographie_paragraphes)
+        return saint_nom, biographie
+
         except Exception as e:
             logger.error(f"Error: {e}")
             return None, None
